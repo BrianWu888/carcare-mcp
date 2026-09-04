@@ -21,6 +21,7 @@ test('static app exposes core dashboard, form, and WebMCP hooks', () => {
   assert.match(script, /executeTool/);
   assert.match(script, /registerTool/);
   assert.match(script, /name:\s*['"]get_vehicle['"]/);
+  assert.match(script, /name:\s*['"]edit_vehicle['"]/);
   assert.match(script, /name:\s*['"]add_maintenance_record['"]/);
   assert.match(script, /name:\s*['"]calculate_next_service['"]/);
 });

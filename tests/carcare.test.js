@@ -9,7 +9,36 @@ import {
   searchMaintenanceRecords,
   getRecommendedServices,
   deriveVehicleMileage,
+  editVehicle,
 } from '../src/carcare.js';
+
+test('edits the vehicle profile fields without losing existing values', () => {
+  assert.deepEqual(editVehicle(DEFAULT_VEHICLE, {
+    year: 2012,
+    make: 'Honda',
+    model: 'Odyssey',
+    engine: '3.5L V6 i-VTEC',
+    mileage: 166000,
+  }), {
+    id: '2012-honda-odyssey',
+    year: 2012,
+    make: 'Honda',
+    model: 'Odyssey',
+    engine: '3.5L V6 i-VTEC',
+    mileage: 166000,
+  });
+
+  assert.deepEqual(editVehicle(DEFAULT_VEHICLE, { mileage: 166000 }), {
+    ...DEFAULT_VEHICLE,
+    mileage: 166000,
+  });
+});
+
+test('rejects invalid vehicle profile edits with helpful errors', () => {
+  assert.throws(() => editVehicle(DEFAULT_VEHICLE, { year: 1800 }), /year must be between 1886 and 2100/);
+  assert.throws(() => editVehicle(DEFAULT_VEHICLE, { mileage: -1 }), /mileage must be a non-negative number/);
+  assert.throws(() => editVehicle(DEFAULT_VEHICLE, { make: '   ' }), /make is required/);
+});
 
 test('adds a maintenance record with mileage, date, and generated id', () => {
   const records = addMaintenanceRecord(DEFAULT_RECORDS, {

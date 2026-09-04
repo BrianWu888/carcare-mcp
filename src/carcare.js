@@ -113,6 +113,40 @@ export function normalizeRecord(input) {
   };
 }
 
+export function editVehicle(vehicle, input = {}) {
+  const next = {
+    ...vehicle,
+    ...Object.fromEntries(
+      Object.entries(input).filter(([, value]) => value !== undefined && value !== null),
+    ),
+  };
+
+  next.year = Number(next.year);
+  next.mileage = Number(next.mileage);
+  next.make = String(next.make || '').trim();
+  next.model = String(next.model || '').trim();
+  next.engine = String(next.engine || '').trim();
+
+  if (!Number.isInteger(next.year) || next.year < 1886 || next.year > 2100) {
+    throw new Error('year must be between 1886 and 2100');
+  }
+  if (!next.make) throw new Error('make is required');
+  if (!next.model) throw new Error('model is required');
+  if (!next.engine) throw new Error('engine is required');
+  if (!Number.isFinite(next.mileage) || next.mileage < 0) {
+    throw new Error('mileage must be a non-negative number');
+  }
+
+  return {
+    id: `${next.year}-${slugify(next.make)}-${slugify(next.model)}`,
+    year: next.year,
+    make: next.make,
+    model: next.model,
+    engine: next.engine,
+    mileage: Math.round(next.mileage),
+  };
+}
+
 export function addMaintenanceRecord(records, input) {
   const nextRecord = normalizeRecord(input);
   const sameVisit = records.find((record) => record.mileage === nextRecord.mileage && record.date === nextRecord.date);

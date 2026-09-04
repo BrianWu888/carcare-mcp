@@ -5,6 +5,7 @@ import {
   calculateNextService,
   deriveVehicleMileage,
   editMaintenanceRecord,
+  editVehicle,
   getRecommendedServices,
   searchMaintenanceRecords,
 } from './carcare.js';
@@ -114,13 +115,23 @@ export function appGetVehicle() {
   return { ...state.vehicle };
 }
 
+export function appEditVehicle(input = {}) {
+  state.vehicle = editVehicle(state.vehicle, input);
+  saveState();
+  renderAll();
+  return {
+    ok: true,
+    vehicle: appGetVehicle(),
+  };
+}
+
 export function appGetMaintenanceHistory() {
   return state.records.map((record) => ({ ...record })).sort((a, b) => b.mileage - a.mileage || b.date.localeCompare(a.date));
 }
 
 export function appAddMaintenanceRecord(input) {
   state.records = addMaintenanceRecord(state.records, input);
-  state.vehicle.mileage = deriveVehicleMileage(DEFAULT_VEHICLE, state.records);
+  state.vehicle.mileage = deriveVehicleMileage(state.vehicle, state.records);
   const added = state.records.find((record) => record.mileage === Math.round(Number(input.mileage)) && record.date === (input.date || new Date().toISOString().slice(0, 10)));
   saveState();
   renderAll();
@@ -141,7 +152,7 @@ export function appEditMaintenanceRecord(input) {
     return record.service === service && record.mileage === Math.round(Number(mileage)) && record.date === date;
   });
 
-  state.vehicle.mileage = deriveVehicleMileage(DEFAULT_VEHICLE, state.records);
+  state.vehicle.mileage = deriveVehicleMileage(state.vehicle, state.records);
   saveState();
   renderAll();
   return {
@@ -176,6 +187,24 @@ async function registerWebMCPTools() {
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     annotations: { readOnlyHint: true },
     execute: async () => appGetVehicle(),
+  });
+
+  await registerTool({
+    name: 'edit_vehicle',
+    description: 'Edit the vehicle profile shown in the My Vehicle card, then refresh the dashboard.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        year: { type: 'number', description: 'Optional vehicle model year, for example 2011.' },
+        make: { type: 'string', description: 'Optional vehicle make, for example Toyota.' },
+        model: { type: 'string', description: 'Optional vehicle model, for example Sienna.' },
+        engine: { type: 'string', description: 'Optional engine description, for example 3.5L V6.' },
+        mileage: { type: 'number', description: 'Optional current odometer mileage.' },
+      },
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false },
+    execute: async (input) => appEditVehicle(input),
   });
 
   await registerTool({
@@ -251,7 +280,7 @@ async function registerWebMCPTools() {
     execute: async (input) => appSearchMaintenanceRecords(input),
   });
 
-  if (status) status.textContent = 'WebMCP API available: registered 6 tools. Click self-test to list and execute a read-only tool.';
+  if (status) status.textContent = 'WebMCP API available: registered 7 tools. Click self-test to list and execute a read-only tool.';
 }
 
 async function runWebMCPSelfTest() {
@@ -318,6 +347,7 @@ function wireEvents() {
 
 window.CarCareMCP = {
   get_vehicle: appGetVehicle,
+  edit_vehicle: appEditVehicle,
   get_maintenance_history: appGetMaintenanceHistory,
   add_maintenance_record: appAddMaintenanceRecord,
   edit_maintenance_record: appEditMaintenanceRecord,
