@@ -68,7 +68,12 @@
             A tiny vehicle maintenance app where humans see a simple dashboard and AI agents get explicit WebMCP tools to read records, add service, and calculate what comes next.
           </p>
         </div>
-        <section id="vehicle-card" class="panel" aria-live="polite"></section>
+        <section id="vehicle-card" class="panel" aria-live="polite">
+          <p class="eyebrow">My Vehicle</p>
+          <h2>2011 Toyota Sienna</h2>
+          <p>3.5L V6</p>
+          <strong>165,200 miles</strong>
+        </section>
       </header>
 
       <section class="grid">
@@ -77,15 +82,57 @@
             <h2>Maintenance History</h2>
             <input id="search-box" aria-label="Search maintenance history" placeholder="Search records" style="max-width: 240px;" />
           </div>
-          <ul id="history-list" aria-live="polite"></ul>
+          <ul id="history-list" aria-live="polite">
+            <li class="record-card">
+              <div>
+                <strong>Engine Oil</strong>
+                <span>163,000 miles · 2026-08-01</span>
+                <small>Oil and filter change.</small>
+              </div>
+              <span aria-label="completed">✓</span>
+            </li>
+            <li class="record-card">
+              <div>
+                <strong>Transmission Fluid</strong>
+                <span>160,000 miles · 2026-07-20</span>
+                <small>Drain and fill automatic transmission fluid.</small>
+              </div>
+              <span aria-label="completed">✓</span>
+            </li>
+            <li class="record-card">
+              <div>
+                <strong>Air Filter</strong>
+                <span>155,000 miles · 2026-05-12</span>
+                <small>Cabin and engine air filter inspected; engine filter replaced.</small>
+              </div>
+              <span aria-label="completed">✓</span>
+            </li>
+            <li class="record-card">
+              <div>
+                <strong>Brake Pads</strong>
+                <span>150,000 miles · 2026-03-18</span>
+                <small>Front pads replaced.</small>
+              </div>
+              <span aria-label="completed">✓</span>
+            </li>
+          </ul>
         </div>
 
         <aside class="panel">
           <h2>Recommended</h2>
-          <ul id="recommended-list" aria-live="polite"></ul>
+          <ul id="recommended-list" aria-live="polite">
+            <li class="recommendation due"><strong>⚠️ Tire Rotation</strong><span>Due now · next at 5,000 miles</span></li>
+            <li class="recommendation due"><strong>⚠️ Brake Fluid</strong><span>Due now · next at 30,000 miles</span></li>
+            <li class="recommendation due-soon"><strong>⚠️ Engine Oil</strong><span>Due soon · next at 168,000 miles</span></li>
+          </ul>
           <div class="panel mcp-card">
             <p class="eyebrow">Next service</p>
-            <div id="next-service" aria-live="polite"></div>
+            <div id="next-service" aria-live="polite">
+              <strong>Engine Oil</strong>
+              <span>Last: 163,000 miles</span>
+              <span>Next: 168,000 miles</span>
+              <span class="pill due-soon">Due soon</span>
+            </div>
           </div>
         </aside>
       </section>

@@ -11,6 +11,10 @@ test('static app exposes core dashboard, form, and WebMCP hooks', () => {
   assert.match(page, /id="vehicle-card"/);
   assert.match(page, /id="history-list"/);
   assert.match(page, /id="add-maintenance-form"/);
+  assert.match(page, /2011 Toyota Sienna/);
+  assert.match(page, /165,200 miles/);
+  assert.match(page, /Engine Oil/);
+  assert.match(page, /Transmission Fluid/);
   assert.match(script, /document\.modelContext/);
   assert.match(script, /registerTool/);
   assert.match(script, /name:\s*['"]get_vehicle['"]/);
