@@ -6,16 +6,16 @@ CarCare MCP is a small WebMCP Challenge demo: a vehicle maintenance dashboard fo
 
 Traditional browser agents must inspect the page and guess which fields or buttons to use. CarCare MCP exposes structured tools directly from the web app with `document.modelContext.registerTool`, so the agent can complete a full maintenance workflow reliably:
 
-> My Sienna just got an oil change at 165,200 miles. Add it to my maintenance history and tell me when the next one is due.
+> My Sienna just got an oil change at 169,500 miles. Add it to my maintenance history and tell me when the next one is due.
 
 The agent can call:
 
 1. `get_vehicle()`
-2. `add_maintenance_record({ service: "Engine Oil", mileage: 165200, date: "2026-09-03" })`
-3. `edit_maintenance_record({ id: "engine-oil-165200-2026-09-03", notes: "Synthetic oil and filter" })`
+2. `add_maintenance_record({ service: "Engine Oil", mileage: 169500, date: "2026-09-04" })`
+3. `edit_maintenance_record({ id: "engine-oil-169500-2026-09-04", notes: "Synthetic oil and filter" })`
 4. `calculate_next_service({ service: "Engine Oil" })`
 
-The website updates immediately and reports the next oil service at **170,200 miles**.
+The website updates immediately and reports the next oil service at **174,500 miles**.
 
 ## WebMCP tools
 
@@ -72,7 +72,7 @@ Show me my maintenance history.
 ```
 
 ```text
-My Sienna just got an oil change at 165,200 miles on September 3, 2026. Add it to my maintenance history and tell me when the next oil change is due.
+My Sienna just got an oil change at 169,500 miles on September 4, 2026. Add it to my maintenance history and tell me when the next oil change is due.
 ```
 
 ```text

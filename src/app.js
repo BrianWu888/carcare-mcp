@@ -9,19 +9,35 @@ import {
 } from './carcare.js';
 
 const STORAGE_KEY = 'carcare-mcp-state-v1';
+const REMOVED_DEMO_RECORD_IDS = new Set(['engine-oil-165200-2026-09-03']);
 const state = loadState();
+
+function removeRetiredDemoRecords(records = []) {
+  return records.filter((record) => !REMOVED_DEMO_RECORD_IDS.has(record.id));
+}
+
+function normalizeLoadedState(candidate) {
+  return {
+    vehicle: { ...DEFAULT_VEHICLE, ...(candidate?.vehicle || {}) },
+    records: removeRetiredDemoRecords(candidate?.records || DEFAULT_RECORDS).map((record) => ({ ...record })),
+  };
+}
 
 function loadState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const nextState = normalizeLoadedState(parsed);
+      if ((parsed.records || []).length !== nextState.records.length) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+      }
+      return nextState;
+    }
   } catch (error) {
     console.warn('Unable to read saved CarCare state', error);
   }
-  return {
-    vehicle: { ...DEFAULT_VEHICLE },
-    records: DEFAULT_RECORDS.map((record) => ({ ...record })),
-  };
+  return normalizeLoadedState();
 }
 
 function saveState() {
@@ -178,7 +194,7 @@ async function registerWebMCPTools() {
       properties: {
         service: { type: 'string', description: 'Service name, such as Engine Oil or Brake Fluid.' },
         mileage: { type: 'number', description: 'Odometer mileage when the service was performed.' },
-        date: { type: 'string', description: 'ISO date, for example 2026-09-03.' },
+        date: { type: 'string', description: 'ISO date, for example 2026-09-04.' },
         notes: { type: 'string', description: 'Optional service notes.' },
       },
       required: ['service', 'mileage'],
