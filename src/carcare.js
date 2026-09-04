@@ -55,6 +55,42 @@ function slugify(value) {
     .replace(/^-|-$/g, '');
 }
 
+function serviceParts(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return [];
+
+  const knownMatches = Object.keys(SERVICE_RULES).filter((service) => raw.toLowerCase().includes(service.toLowerCase()));
+  if (knownMatches.length > 1) return knownMatches;
+
+  return raw
+    .split(/\s*(?:\+|,|&|\band\b)\s*/i)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function serviceMatches(recordService, requestedService) {
+  return serviceParts(recordService).some((part) => part.toLowerCase() === String(requestedService).trim().toLowerCase());
+}
+
+function combineServices(...services) {
+  const byLower = new Map();
+  for (const service of services) {
+    for (const part of serviceParts(service)) {
+      const key = part.toLowerCase();
+      if (!byLower.has(key)) byLower.set(key, part);
+    }
+  }
+  return [...byLower.values()].join(' + ');
+}
+
+function combineNotes(...notes) {
+  const uniqueNotes = notes
+    .map((note) => String(note || '').trim())
+    .filter(Boolean)
+    .filter((note, index, all) => all.indexOf(note) === index);
+  return uniqueNotes.join(' ');
+}
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -79,8 +115,24 @@ export function normalizeRecord(input) {
 
 export function addMaintenanceRecord(records, input) {
   const nextRecord = normalizeRecord(input);
-  const withoutDuplicate = records.filter((record) => record.id !== nextRecord.id);
-  return [...withoutDuplicate, nextRecord].sort((a, b) => a.mileage - b.mileage || a.date.localeCompare(b.date));
+  const sameVisit = records.find((record) => record.mileage === nextRecord.mileage && record.date === nextRecord.date);
+
+  if (!sameVisit || sameVisit.id === nextRecord.id) {
+    const withoutDuplicate = records.filter((record) => record.id !== nextRecord.id);
+    return [...withoutDuplicate, nextRecord].sort((a, b) => a.mileage - b.mileage || a.date.localeCompare(b.date));
+  }
+
+  const mergedRecord = normalizeRecord({
+    service: combineServices(sameVisit.service, nextRecord.service),
+    mileage: nextRecord.mileage,
+    date: nextRecord.date,
+    notes: combineNotes(sameVisit.notes, nextRecord.notes),
+  });
+
+  return records
+    .filter((record) => record.id !== sameVisit.id && record.id !== nextRecord.id && record.id !== mergedRecord.id)
+    .concat(mergedRecord)
+    .sort((a, b) => a.mileage - b.mileage || a.date.localeCompare(b.date));
 }
 
 export function editMaintenanceRecord(records, input) {
@@ -111,8 +163,12 @@ export function searchMaintenanceRecords(records, query = '') {
 
 export function latestRecordFor(records, service) {
   return records
-    .filter((record) => record.service.toLowerCase() === String(service).toLowerCase())
+    .filter((record) => serviceMatches(record.service, service))
     .sort((a, b) => b.mileage - a.mileage || b.date.localeCompare(a.date))[0] || null;
+}
+
+export function deriveVehicleMileage(vehicle, records) {
+  return Math.max(Number(vehicle?.mileage || 0), ...records.map((record) => Number(record.mileage || 0)));
 }
 
 function serviceStatus(milesRemaining, dueSoonMiles) {

@@ -8,6 +8,7 @@ import {
   editMaintenanceRecord,
   searchMaintenanceRecords,
   getRecommendedServices,
+  deriveVehicleMileage,
 } from '../src/carcare.js';
 
 test('adds a maintenance record with mileage, date, and generated id', () => {
@@ -70,6 +71,51 @@ test('throws a helpful error when editing a missing maintenance record', () => {
     () => editMaintenanceRecord(DEFAULT_RECORDS, { id: 'missing-record', notes: 'No-op' }),
     /maintenance record not found: missing-record/,
   );
+});
+
+test('merges multiple services performed on the same date and mileage into one visit record', () => {
+  const withOil = addMaintenanceRecord(DEFAULT_RECORDS, {
+    service: 'Engine Oil',
+    mileage: 175500,
+    date: '2026-09-05',
+    notes: 'Used 0W-20 full synthetic oil.',
+  });
+  const withSameVisitRotation = addMaintenanceRecord(withOil, {
+    service: 'Tire Rotation',
+    mileage: 175500,
+    date: '2026-09-05',
+  });
+
+  assert.equal(withSameVisitRotation.length, DEFAULT_RECORDS.length + 1);
+  assert.deepEqual(withSameVisitRotation.at(-1), {
+    id: 'engine-oil-tire-rotation-175500-2026-09-05',
+    service: 'Engine Oil + Tire Rotation',
+    mileage: 175500,
+    date: '2026-09-05',
+    notes: 'Used 0W-20 full synthetic oil.',
+  });
+});
+
+test('derives displayed vehicle mileage from the latest maintenance record after edits', () => {
+  const editedRecords = editMaintenanceRecord(DEFAULT_RECORDS, {
+    id: 'engine-oil-163000-2026-08-01',
+    mileage: 175500,
+    date: '2026-09-05',
+  });
+
+  assert.equal(deriveVehicleMileage(DEFAULT_VEHICLE, editedRecords), 175500);
+});
+
+test('uses a combined visit record as the latest record for each included service', () => {
+  const records = addMaintenanceRecord(DEFAULT_RECORDS, {
+    service: 'Engine Oil + Tire Rotation',
+    mileage: 175500,
+    date: '2026-09-05',
+    notes: 'Used 0W-20 full synthetic oil.',
+  });
+
+  assert.equal(calculateNextService({ ...DEFAULT_VEHICLE, mileage: 175500 }, records, 'Engine Oil').lastMileage, 175500);
+  assert.equal(calculateNextService({ ...DEFAULT_VEHICLE, mileage: 175500 }, records, 'Tire Rotation').lastMileage, 175500);
 });
 
 test('calculates next service for oil from latest matching record', () => {

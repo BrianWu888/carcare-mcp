@@ -3,6 +3,7 @@ import {
   DEFAULT_RECORDS,
   addMaintenanceRecord,
   calculateNextService,
+  deriveVehicleMileage,
   editMaintenanceRecord,
   getRecommendedServices,
   searchMaintenanceRecords,
@@ -119,14 +120,13 @@ export function appGetMaintenanceHistory() {
 
 export function appAddMaintenanceRecord(input) {
   state.records = addMaintenanceRecord(state.records, input);
-  if (Number(input.mileage) > Number(state.vehicle.mileage)) {
-    state.vehicle.mileage = Math.round(Number(input.mileage));
-  }
+  state.vehicle.mileage = deriveVehicleMileage(DEFAULT_VEHICLE, state.records);
+  const added = state.records.find((record) => record.mileage === Math.round(Number(input.mileage)) && record.date === (input.date || new Date().toISOString().slice(0, 10)));
   saveState();
   renderAll();
   return {
     ok: true,
-    added: state.records.find((record) => record.id === `${String(input.service).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Math.round(Number(input.mileage))}-${input.date || new Date().toISOString().slice(0, 10)}`),
+    added,
     history: appGetMaintenanceHistory(),
   };
 }
@@ -141,7 +141,7 @@ export function appEditMaintenanceRecord(input) {
     return record.service === service && record.mileage === Math.round(Number(mileage)) && record.date === date;
   });
 
-  state.vehicle.mileage = Math.max(state.vehicle.mileage, ...state.records.map((record) => record.mileage));
+  state.vehicle.mileage = deriveVehicleMileage(DEFAULT_VEHICLE, state.records);
   saveState();
   renderAll();
   return {
@@ -188,11 +188,11 @@ async function registerWebMCPTools() {
 
   await registerTool({
     name: 'add_maintenance_record',
-    description: 'Add or update a maintenance record and refresh the dashboard.',
+    description: 'Add or update one maintenance visit and refresh the dashboard. If multiple services were done at the same date and mileage, keep them together in one record instead of creating separate visit records.',
     inputSchema: {
       type: 'object',
       properties: {
-        service: { type: 'string', description: 'Service name, such as Engine Oil or Brake Fluid.' },
+        service: { type: 'string', description: 'Service name, such as Engine Oil, Brake Fluid, or Engine Oil + Tire Rotation when multiple services were performed in the same visit.' },
         mileage: { type: 'number', description: 'Odometer mileage when the service was performed.' },
         date: { type: 'string', description: 'ISO date, for example 2026-09-04.' },
         notes: { type: 'string', description: 'Optional service notes.' },
@@ -211,7 +211,7 @@ async function registerWebMCPTools() {
       type: 'object',
       properties: {
         id: { type: 'string', description: 'Existing maintenance record id from get_maintenance_history.' },
-        service: { type: 'string', description: 'Optional updated service name.' },
+        service: { type: 'string', description: 'Optional updated service name; use a combined label such as Engine Oil + Tire Rotation for services performed in the same visit.' },
         mileage: { type: 'number', description: 'Optional updated odometer mileage.' },
         date: { type: 'string', description: 'Optional updated ISO date, for example 2026-09-04.' },
         notes: { type: 'string', description: 'Optional updated service notes.' },

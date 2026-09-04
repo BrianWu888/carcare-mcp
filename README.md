@@ -64,7 +64,7 @@ Use a WebMCP-capable browser/client:
 Suggested demo prompts:
 
 ```text
-Look up my vehicle, review the maintenance history, add an Engine Oil service at 169500 miles dated 2026-09-04 with note "Full synthetic oil change", edit that new record's note to "Full synthetic oil change + filter", then calculate when the next oil service is due.
+Look up my vehicle, review the maintenance history, then add one combined visit record: I changed the engine oil at 2026-09-05 at 175,500 miles using 0W-20 full synthetic oil and Tire Rotation. Add this to my maintenance history, keep same-date same-mileage services together, and tell me when the next oil change and tire rotation are due.
 ```
 
 ```text
