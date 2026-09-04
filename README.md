@@ -33,6 +33,15 @@ The website updates immediately and reports the next oil service at **170,200 mi
   - Air Filter — 155,000 miles
   - Brake Pads — 150,000 miles
 
+## Storage model
+
+CarCare MCP is intentionally backend-free for the demo. It stores records in the current browser profile's `localStorage` under `carcare-mcp-state-v1`.
+
+- Persists after page refresh and normal browser restart.
+- Does not sync across devices, browsers, or Chrome profiles.
+- Can be restored to the seeded Toyota Sienna history with the **Reset demo data** button.
+- Keeps the WebMCP workflow privacy-friendly and easy to judge without database credentials.
+
 ## Run locally
 
 ```bash
@@ -51,6 +60,10 @@ Use a WebMCP-capable browser/client:
 - Chrome with `chrome://flags/#enable-webmcp-testing` enabled.
 
 Suggested demo prompts:
+
+```text
+Look up my vehicle, review the maintenance history, add an Engine Oil service at 169500 miles dated 2026-09-04 with note "Full synthetic oil change", then calculate when the next oil service is due.
+```
 
 ```text
 Show me my maintenance history.
