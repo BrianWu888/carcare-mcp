@@ -126,7 +126,9 @@ export function appSearchMaintenanceRecords(input = {}) {
 async function registerWebMCPTools() {
   const modelContext = document.modelContext;
   const registerTool = modelContext?.registerTool?.bind(modelContext);
+  const status = document.querySelector('#webmcp-status');
   if (!registerTool) {
+    if (status) status.textContent = 'WebMCP API unavailable in this browser: document.modelContext.registerTool is missing. The UI still works normally.';
     console.info('WebMCP document.modelContext.registerTool is not available in this browser yet. UI still works normally.');
     return;
   }
@@ -192,6 +194,43 @@ async function registerWebMCPTools() {
     annotations: { readOnlyHint: true },
     execute: async (input) => appSearchMaintenanceRecords(input),
   });
+
+  if (status) status.textContent = 'WebMCP API available: registered 5 tools. Click self-test to list and execute a read-only tool.';
+}
+
+async function runWebMCPSelfTest() {
+  const output = document.querySelector('#webmcp-self-test-output');
+  const status = document.querySelector('#webmcp-status');
+  if (!output) return;
+  output.textContent = '';
+
+  const modelContext = document.modelContext;
+  if (!modelContext?.getTools || !modelContext?.executeTool) {
+    const message = 'This browser tab does not expose document.modelContext.getTools/executeTool. Enable chrome://flags/#enable-webmcp-testing, fully quit Chrome, reopen Chrome, then reload this page.';
+    output.textContent = message;
+    if (status) status.textContent = 'WebMCP self-test failed: API unavailable in this tab.';
+    return;
+  }
+
+  try {
+    const tools = await modelContext.getTools();
+    const names = tools.map((tool) => tool.name).sort();
+    const vehicleTool = tools.find((tool) => tool.name === 'get_vehicle');
+    let vehicleResult = null;
+    if (vehicleTool) {
+      vehicleResult = await modelContext.executeTool(vehicleTool, '{}');
+    }
+    output.textContent = JSON.stringify({
+      modelContext: true,
+      toolCount: tools.length,
+      tools: names,
+      getVehicleResult: vehicleResult,
+    }, null, 2);
+    if (status) status.textContent = `WebMCP self-test passed: found ${tools.length} tools in this Chrome tab.`;
+  } catch (error) {
+    output.textContent = `WebMCP self-test error: ${error?.message || error}`;
+    if (status) status.textContent = 'WebMCP self-test failed while listing or executing tools.';
+  }
 }
 
 function wireEvents() {
@@ -214,6 +253,10 @@ function wireEvents() {
   document.querySelector('#reset-demo').addEventListener('click', () => {
     localStorage.removeItem(STORAGE_KEY);
     window.location.reload();
+  });
+
+  document.querySelector('#webmcp-self-test')?.addEventListener('click', () => {
+    runWebMCPSelfTest();
   });
 }
 
