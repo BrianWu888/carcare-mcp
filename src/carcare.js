@@ -83,6 +83,26 @@ export function addMaintenanceRecord(records, input) {
   return [...withoutDuplicate, nextRecord].sort((a, b) => a.mileage - b.mileage || a.date.localeCompare(b.date));
 }
 
+export function editMaintenanceRecord(records, input) {
+  const id = String(input.id || '').trim();
+  if (!id) throw new Error('id is required');
+
+  const existing = records.find((record) => record.id === id);
+  if (!existing) throw new Error(`maintenance record not found: ${id}`);
+
+  const updated = normalizeRecord({
+    service: input.service ?? existing.service,
+    mileage: input.mileage ?? existing.mileage,
+    date: input.date ?? existing.date,
+    notes: input.notes ?? existing.notes,
+  });
+
+  return records
+    .filter((record) => record.id !== id && record.id !== updated.id)
+    .concat(updated)
+    .sort((a, b) => a.mileage - b.mileage || a.date.localeCompare(b.date));
+}
+
 export function searchMaintenanceRecords(records, query = '') {
   const needle = String(query).trim().toLowerCase();
   if (!needle) return [...records];

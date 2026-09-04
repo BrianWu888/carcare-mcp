@@ -1,6 +1,6 @@
 # CarCare MCP
 
-CarCare MCP is a small WebMCP Challenge demo: a vehicle maintenance dashboard for a 2011 Toyota Sienna where a human can review service history, and an AI agent can use explicit WebMCP tools to add service records and calculate upcoming maintenance.
+CarCare MCP is a small WebMCP Challenge demo: a vehicle maintenance dashboard for a 2011 Toyota Sienna where a human can review service history, and an AI agent can use explicit WebMCP tools to add or edit service records and calculate upcoming maintenance.
 
 ## Why WebMCP
 
@@ -12,7 +12,8 @@ The agent can call:
 
 1. `get_vehicle()`
 2. `add_maintenance_record({ service: "Engine Oil", mileage: 165200, date: "2026-09-03" })`
-3. `calculate_next_service({ service: "Engine Oil" })`
+3. `edit_maintenance_record({ id: "engine-oil-165200-2026-09-03", notes: "Synthetic oil and filter" })`
+4. `calculate_next_service({ service: "Engine Oil" })`
 
 The website updates immediately and reports the next oil service at **170,200 miles**.
 
@@ -21,6 +22,7 @@ The website updates immediately and reports the next oil service at **170,200 mi
 - `get_vehicle()` — returns year, make, model, engine, and mileage.
 - `get_maintenance_history()` — returns maintenance records sorted by recent mileage.
 - `add_maintenance_record(service, mileage, date, notes)` — adds or updates a service record and refreshes the dashboard.
+- `edit_maintenance_record(id, service, mileage, date, notes)` — edits an existing maintenance record by id and refreshes the dashboard.
 - `calculate_next_service(service)` — calculates next mileage and due status for a service.
 - `search_maintenance_records(query)` — searches records by service, mileage, date, or notes.
 
@@ -62,7 +64,7 @@ Use a WebMCP-capable browser/client:
 Suggested demo prompts:
 
 ```text
-Look up my vehicle, review the maintenance history, add an Engine Oil service at 169500 miles dated 2026-09-04 with note "Full synthetic oil change", then calculate when the next oil service is due.
+Look up my vehicle, review the maintenance history, add an Engine Oil service at 169500 miles dated 2026-09-04 with note "Full synthetic oil change", edit that new record's note to "Full synthetic oil change + filter", then calculate when the next oil service is due.
 ```
 
 ```text
@@ -98,7 +100,7 @@ python3 -m http.server 4173
 
 ## Devpost short description
 
-CarCare MCP is an agent-native vehicle maintenance dashboard. It lets people track car service history while exposing WebMCP tools so AI agents can read vehicle records, add new maintenance, search history, and calculate next service intervals without guessing UI controls.
+CarCare MCP is an agent-native vehicle maintenance dashboard. It lets people track car service history while exposing WebMCP tools so AI agents can read vehicle records, add or edit maintenance, search history, and calculate next service intervals without guessing UI controls.
 
 ## License
 

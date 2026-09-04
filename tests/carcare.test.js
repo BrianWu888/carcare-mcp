@@ -5,6 +5,7 @@ import {
   DEFAULT_RECORDS,
   addMaintenanceRecord,
   calculateNextService,
+  editMaintenanceRecord,
   searchMaintenanceRecords,
   getRecommendedServices,
 } from '../src/carcare.js';
@@ -43,6 +44,32 @@ test('replaces an existing matching service-mileage-date record instead of dupli
 
   assert.equal(twice.length, once.length);
   assert.equal(twice.at(-1).notes, 'Updated note');
+});
+
+test('edits an existing maintenance record by id and regenerates id when key fields change', () => {
+  const records = editMaintenanceRecord(DEFAULT_RECORDS, {
+    id: 'engine-oil-163000-2026-08-01',
+    mileage: 164000,
+    date: '2026-08-02',
+    notes: 'Corrected mileage and date.',
+  });
+
+  assert.equal(records.length, DEFAULT_RECORDS.length);
+  assert.equal(records.some((record) => record.id === 'engine-oil-163000-2026-08-01'), false);
+  assert.deepEqual(records.find((record) => record.id === 'engine-oil-164000-2026-08-02'), {
+    id: 'engine-oil-164000-2026-08-02',
+    service: 'Engine Oil',
+    mileage: 164000,
+    date: '2026-08-02',
+    notes: 'Corrected mileage and date.',
+  });
+});
+
+test('throws a helpful error when editing a missing maintenance record', () => {
+  assert.throws(
+    () => editMaintenanceRecord(DEFAULT_RECORDS, { id: 'missing-record', notes: 'No-op' }),
+    /maintenance record not found: missing-record/,
+  );
 });
 
 test('calculates next service for oil from latest matching record', () => {

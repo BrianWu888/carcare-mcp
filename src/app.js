@@ -3,6 +3,7 @@ import {
   DEFAULT_RECORDS,
   addMaintenanceRecord,
   calculateNextService,
+  editMaintenanceRecord,
   getRecommendedServices,
   searchMaintenanceRecords,
 } from './carcare.js';
@@ -114,6 +115,26 @@ export function appAddMaintenanceRecord(input) {
   };
 }
 
+export function appEditMaintenanceRecord(input) {
+  const original = state.records.find((record) => record.id === input.id);
+  state.records = editMaintenanceRecord(state.records, input);
+  const edited = state.records.find((record) => {
+    const service = input.service ?? original?.service;
+    const mileage = input.mileage ?? original?.mileage;
+    const date = input.date ?? original?.date;
+    return record.service === service && record.mileage === Math.round(Number(mileage)) && record.date === date;
+  });
+
+  state.vehicle.mileage = Math.max(state.vehicle.mileage, ...state.records.map((record) => record.mileage));
+  saveState();
+  renderAll();
+  return {
+    ok: true,
+    edited,
+    history: appGetMaintenanceHistory(),
+  };
+}
+
 export function appCalculateNextService(input = {}) {
   const service = input.service || 'Engine Oil';
   return calculateNextService(state.vehicle, state.records, service);
@@ -168,6 +189,25 @@ async function registerWebMCPTools() {
   });
 
   await registerTool({
+    name: 'edit_maintenance_record',
+    description: 'Edit an existing maintenance record by id, then refresh the dashboard.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Existing maintenance record id from get_maintenance_history.' },
+        service: { type: 'string', description: 'Optional updated service name.' },
+        mileage: { type: 'number', description: 'Optional updated odometer mileage.' },
+        date: { type: 'string', description: 'Optional updated ISO date, for example 2026-09-04.' },
+        notes: { type: 'string', description: 'Optional updated service notes.' },
+      },
+      required: ['id'],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false },
+    execute: async (input) => appEditMaintenanceRecord(input),
+  });
+
+  await registerTool({
     name: 'calculate_next_service',
     description: 'Calculate the next recommended mileage and due status for a maintenance service.',
     inputSchema: {
@@ -195,7 +235,7 @@ async function registerWebMCPTools() {
     execute: async (input) => appSearchMaintenanceRecords(input),
   });
 
-  if (status) status.textContent = 'WebMCP API available: registered 5 tools. Click self-test to list and execute a read-only tool.';
+  if (status) status.textContent = 'WebMCP API available: registered 6 tools. Click self-test to list and execute a read-only tool.';
 }
 
 async function runWebMCPSelfTest() {
@@ -264,6 +304,7 @@ window.CarCareMCP = {
   get_vehicle: appGetVehicle,
   get_maintenance_history: appGetMaintenanceHistory,
   add_maintenance_record: appAddMaintenanceRecord,
+  edit_maintenance_record: appEditMaintenanceRecord,
   calculate_next_service: appCalculateNextService,
   search_maintenance_records: appSearchMaintenanceRecords,
 };
